@@ -1,9 +1,10 @@
 const router = require('express').Router();
 const User = require('../models/UserModel');
+const jwt = require('jsonwebtoken')
 const CryptoJS = require('crypto-js');
-router.get('/users',(req,res)=>{
-    res.send('User test is successful......');
-});
+// router.get('/users',(req,res)=>{
+//     res.send('User test is successful......');
+// });
 
 
 router.post('/register', async (req,res)=>{
@@ -37,8 +38,16 @@ router.post('/login', async (req,res)=>{
         // if you want all information except password then use below lines
         const originalPassword = hashedPass.toString(CryptoJS.enc.Utf8);
         originalPassword !== req.body.password && res.status(401).json("Wrong credentials..!");
+
+        const accessToken = jwt.sign({
+            id: user._id,
+            isAdmin: user.isAdmin,
+        },
+        process.env.JWT_SEC,
+        {expiresIn: '1d'}
+        )
         const {password, ...others} = user._doc;
-        res.status(200).json(others);
+        res.status(200).json({...others, accessToken});
     } catch(err){
         console.log(err)
         res.status(500).json(err);
